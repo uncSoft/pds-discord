@@ -179,3 +179,22 @@ def test_the_client_key_is_sent_as_a_header_with_a_hashed_reader():
 def test_one_question_in_flight_by_default():
     assert Config().at_once == 1
     assert isinstance(a_bot().gate, Gate)
+
+
+def test_a_test_server_can_be_named_so_its_commands_appear_at_once():
+    os.environ.pop("PDS_GUILD_ID", None)
+    assert Config().guild_id == 0
+    os.environ["PDS_GUILD_ID"] = "1566613383325818990"
+    try:
+        assert Config().guild_id == 1566613383325818990
+    finally:
+        os.environ.pop("PDS_GUILD_ID", None)
+
+
+def test_every_command_is_open_to_everyone():
+    """Nothing here is gated on a permission: a command Discord will not let someone send is not
+    something this bot asked for."""
+    bot = a_bot()
+    for command in bot.tree.get_commands():
+        assert command.default_permissions is None, command.name
+        assert getattr(command, "guild_only", False) is False, command.name
