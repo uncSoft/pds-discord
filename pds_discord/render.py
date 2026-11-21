@@ -112,12 +112,6 @@ def link_view(*buttons: tuple[str, str, str]) -> discord.ui.View | None:
     return view
 
 
-def thinking_embed(question: str) -> discord.Embed:
-    e = discord.Embed(title=shorten(question, TITLE_LIMIT)[0], colour=ACCENT,
-                      description="Looking through the library...")
-    return e
-
-
 def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> list[discord.Embed]:
     """The finished answer, or what has arrived so far while it streams."""
     if answer.support:

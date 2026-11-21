@@ -106,7 +106,10 @@ class LibraryBot(discord.Client):
         """Put one question to the assistant and keep the reply up to date while it streams.
         The interaction is already deferred."""
         key = (interaction.channel_id, interaction.user.id)
+        log.info("asking in server %s (%d characters, %d turns of history)",
+                 interaction.guild_id, len(question), len(self.threads.history(key)))
         if wait := self.budgets.take(interaction.user.id, interaction.guild_id):
+            log.info("not asked: the reader or the server is over its allowance")
             await interaction.edit_original_response(
                 embeds=[discord.Embed(colour=render.MUTED, description=wait)])
             return
@@ -124,17 +127,23 @@ class LibraryBot(discord.Client):
                                                     streaming=not reply.done),
                         view=self.answer_view(reply.support) if reply.done else discord.utils.MISSING)
             if reply is None:
+                log.warning("the assistant closed the connection without answering")
                 return
+            log.info("answered: %d characters, %d sources, %s", len(reply.text), len(reply.cited),
+                     "care-first reply" if reply.support else "declined" if reply.decline
+                     else f"error: {reply.error}" if reply.error else "ok")
             if reply.text and not (reply.decline or reply.support or reply.error):
                 self.threads.remember(key, question, reply.as_history())
             elif reply.support or reply.decline:
                 self.threads.clear(key)  # neither belongs in a follow-up's history
         except TimeoutError:
+            log.info("not asked: this bot already has its questions in flight")
             self.budgets.refund(interaction.user.id, interaction.guild_id)
             await interaction.edit_original_response(embeds=[discord.Embed(
                 colour=render.MUTED,
                 description="I'm still working through other questions. Please ask again shortly.")])
         except AskError as exc:
+            log.warning("the assistant would not answer: %s", exc.message)
             self.budgets.refund(interaction.user.id, interaction.guild_id)
             await interaction.edit_original_response(
                 embeds=[discord.Embed(colour=render.WARN, description=exc.message)])
@@ -151,6 +160,21 @@ class LibraryBot(discord.Client):
 def register_commands(bot: LibraryBot) -> None:
     tree = bot.tree
     site = bot.config.site
+
+    @tree.error
+    async def failed(interaction: discord.Interaction, error: app_commands.AppCommandError) -> None:
+        """Anything that got past the handlers: say so in the log, and to whoever is waiting, rather
+        than leaving Discord's "thinking" to spin until it times out."""
+        log.exception("/%s failed", getattr(interaction.command, "name", "?"), exc_info=error)
+        said = discord.Embed(colour=render.WARN,
+                             description="Something went wrong on my side. Please try again shortly.")
+        try:
+            if interaction.response.is_done():
+                await interaction.edit_original_response(embeds=[said])
+            else:
+                await interaction.response.send_message(embed=said, ephemeral=True)
+        except discord.HTTPException:
+            pass
 
     async def records(interaction: discord.Interaction, partial: str) -> list[app_commands.Choice[str]]:
         hits = await bot.library.suggest(partial, limit=25)
@@ -170,8 +194,9 @@ def register_commands(bot: LibraryBot) -> None:
                 f"That question is longer than the assistant takes ({MAX_QUESTION} characters). "
                 "Could you shorten it?", ephemeral=True)
             return
+        # Discord shows its own "thinking" state after a defer, so nothing is edited in until the
+        # first tokens arrive: an edit sent in the same breath as the defer can come back 404.
         await interaction.response.defer(thinking=True, ephemeral=private)
-        await interaction.edit_original_response(embeds=[render.thinking_embed(question)])
         await bot.answer(interaction, question)
 
     @tree.context_menu(name="Ask the library")
@@ -184,7 +209,6 @@ def register_commands(bot: LibraryBot) -> None:
                 "There's no question in that message for me to look up.", ephemeral=True)
             return
         await interaction.response.defer(thinking=True)
-        await interaction.edit_original_response(embeds=[render.thinking_embed(question)])
         await bot.answer(interaction, question[:MAX_QUESTION])
 
     @tree.command(name="search", description="Find records in the library by title, keyword or ID")
