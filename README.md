@@ -3,7 +3,7 @@
 **Ask the post-drug syndromes research library from your own Discord server.** Every answer cites
 the records it came from.
 
-[**➕ Add to Discord**](https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot+applications.commands&permissions=19456)
+[**➕ Add to Discord**](https://discord.com/oauth2/authorize?client_id=1573604090225758208&scope=bot+applications.commands&permissions=19456)
 · [The library](https://postdrugsyndrome.com/research)
 · [The assistant](https://ask.postdrugsyndrome.com/)
 · [Every command](https://pds-discord-site.onrender.com/commands.html)
@@ -120,8 +120,7 @@ link straight to the whole question rather than to an empty box.
    The commands register globally on startup, which takes Discord a minute to spread around.
 4. **Invite it.** Developer Portal → OAuth2 → URL Generator → scopes `bot` and
    `applications.commands`, permissions **View Channels**, **Send Messages** and **Embed Links**.
-   Or take the link `/about` prints. Three files carry a `YOUR_CLIENT_ID` placeholder for the site;
-   replace it with the application's ID.
+   Or take the link at the top of this file, which carries the application ID already.
 
 ## Tests
 
