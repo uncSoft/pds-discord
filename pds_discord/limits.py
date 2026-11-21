@@ -132,18 +132,30 @@ class Gate:
     answering slots while someone on the library's own site is waiting."""
 
     def __init__(self, at_once: int = 1, patience: float = 25.0) -> None:
-        self._slots = asyncio.Semaphore(at_once)
-        self.patience = patience
+        self.at_once, self.patience = max(1, at_once), patience
+        self._slots: asyncio.Semaphore | None = None
+        self._loop: object | None = None
+
+    def _semaphore(self) -> asyncio.Semaphore:
+        """Made on first use, inside the loop that is going to wait on it. Made in __init__ it would
+        belong to whatever loop existed at the time, which is not the one the bot ends up running
+        on, and on an older Python every acquire then raises instead of waiting."""
+        loop = asyncio.get_running_loop()
+        if self._slots is None or self._loop is not loop:
+            self._slots, self._loop = asyncio.Semaphore(self.at_once), loop
+        return self._slots
 
     async def __aenter__(self) -> "Gate":
+        slots = self._semaphore()
         try:
-            await asyncio.wait_for(self._slots.acquire(), self.patience)
+            await asyncio.wait_for(slots.acquire(), self.patience)
         except asyncio.TimeoutError as exc:
             raise TimeoutError("busy") from exc
         return self
 
     async def __aexit__(self, *_) -> None:
-        self._slots.release()
+        if self._slots is not None:
+            self._slots.release()
 
 
 class Threads:

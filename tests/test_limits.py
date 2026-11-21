@@ -1,4 +1,6 @@
-from pds_discord.limits import (KEYED_USER_WINDOWS, USER_WINDOWS, Budget, Budgets,
+import asyncio
+
+from pds_discord.limits import (KEYED_USER_WINDOWS, USER_WINDOWS, Budget, Budgets, Gate,
                                 Threads, human)
 
 
@@ -124,3 +126,42 @@ def test_the_keyed_allowances_stay_inside_what_the_assistant_gives_this_client()
     keyed = Budgets.for_client(True)
     assert dict(keyed.user.windows) == {60: 4, 3600: 25}       # the assistant allows 6 and 40 a reader
     assert dict(keyed.overall.windows) == {60: 18, 3600: 180}  # and 20 and 200 to the client as a whole
+
+
+def test_the_gate_was_made_before_there_was_a_loop_to_make_it_in():
+    """The bot builds its Gate in __init__, which runs before asyncio.run. A semaphore made then
+    belongs to another loop, and on an older Python every question would raise instead of asking."""
+    gate = Gate(1)
+
+    async def through() -> bool:
+        async with gate:
+            return True
+
+    assert asyncio.run(through()) is True
+    assert asyncio.run(through()) is True  # a second loop, as a restart gives
+
+
+def test_the_gate_holds_a_second_question_back():
+    gate = Gate(1, patience=0.05)
+
+    async def both() -> str:
+        async with gate:
+            try:
+                async with gate:
+                    return "two at once"
+            except TimeoutError:
+                return "the second waited"
+
+    assert asyncio.run(both()) == "the second waited"
+
+
+def test_the_gate_frees_its_slot_again():
+    gate = Gate(1, patience=0.05)
+
+    async def twice() -> str:
+        async with gate:
+            pass
+        async with gate:
+            return "the slot came back"
+
+    assert asyncio.run(twice()) == "the slot came back"
