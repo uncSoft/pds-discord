@@ -1,4 +1,5 @@
-from pds_discord.limits import Budget, Budgets, Threads, human
+from pds_discord.limits import (KEYED_USER_WINDOWS, USER_WINDOWS, Budget, Budgets,
+                                Threads, human)
 
 
 def test_a_budget_allows_its_window_then_says_how_long_to_wait():
@@ -108,3 +109,18 @@ def test_forgetting_and_sweeping_drop_a_conversation():
     threads.remember((3, 4), "q?", {"role": "assistant", "content": "a"})
     threads.sweep()
     assert threads._talk == {}
+
+
+def test_the_allowances_widen_once_the_assistant_knows_this_client():
+    unkeyed, keyed = Budgets.for_client(False), Budgets.for_client(True)
+    assert unkeyed.user.windows == USER_WINDOWS and keyed.user.windows == KEYED_USER_WINDOWS
+    for budget in ("user", "guild", "overall"):
+        before = dict(getattr(unkeyed, budget).windows)
+        after = dict(getattr(keyed, budget).windows)
+        assert all(after[w] > before[w] for w in before), budget
+
+
+def test_the_keyed_allowances_stay_inside_what_the_assistant_gives_this_client():
+    keyed = Budgets.for_client(True)
+    assert dict(keyed.user.windows) == {60: 4, 3600: 25}       # the assistant allows 6 and 40 a reader
+    assert dict(keyed.overall.windows) == {60: 18, 3600: 180}  # and 20 and 200 to the client as a whole

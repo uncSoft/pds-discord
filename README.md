@@ -40,7 +40,7 @@ word for word, and the care-first reply gets no "not medical advice" footer unde
 | Storage | None. No database, no disk. Questions are never written down; the few turns kept for follow-ups are in memory for ten minutes |
 | Intents | None privileged. It cannot read what people type in channels: slash commands and the context menu arrive as interactions |
 | Hosting | Render background worker, auto-deploying on push. The site in `site/` is a Render static site. `deploy/` has a systemd unit for a plain VPS |
-| Tests | 78 pytest tests, including recorded answer streams and end-to-end handler tests with stand-in Discord objects |
+| Tests | 80 pytest tests, including recorded answer streams and end-to-end handler tests with stand-in Discord objects |
 
 ```
 pds_discord/
@@ -77,31 +77,27 @@ There is nothing to configure in the bot, and so nothing for it to store.
 
 ## The server side
 
-The assistant keeps a rate limit of 6 questions a minute and 40 an hour **per IP address**, and
-answers 2 at a time in all. Every question from Discord arrives from this one process, so by default
-the whole of Discord shares a single reader's allowance.
+The assistant keeps a rate limit of 6 questions a minute and 40 an hour **per IP address**. Every
+question from Discord arrives from this one process, so without a shared key the whole of Discord
+looks to it like a single reader.
 
-The bot is safe to run that way: the budgets in `pds_discord/limits.py` are set to stay inside it
-(2 a minute per reader, 4 per server, 5 for the bot as a whole), and one question in flight leaves
-the assistant a slot for readers on the library's own site. Busy servers wait rather than spending
-the allowance the site's readers need.
+The bot is safe to run that way, and ships that way: the budgets in `pds_discord/limits.py` stay
+inside one reader's allowance (2 a minute per reader, 4 per server, 5 for the bot as a whole) and
+one question in flight leaves the assistant a slot for readers on the library's own site. Busy
+servers wait rather than spending the allowance the site's readers need.
 
-To lift that, the assistant can count per reader instead. In the library's repo:
+Set `PDS_CLIENT_KEY` to the same value as the assistant's `DISCORD_CLIENT_KEY` and the bot sends two
+headers with each question:
 
-1. `bot/pdsrag/server.py`: in `client_id()`, when `X-PDS-Client` matches a new `DISCORD_CLIENT_KEY`
-   secret, take the identity from `X-PDS-Client-User` instead of `cf-connecting-ip`. That header is
-   a SHA-256 of the key and the Discord user ID, so the server never sees who is asking.
-2. `deploy/bot/Dockerfile`: raise `MAX_CONCURRENT` from 2. Peak memory is measured at 443 MB of
-   1 GB, so there looks to be room for one more reader; measure before trusting that.
-3. Document the header in `docs/INTEGRATION.md` and `bot/HANDOFF.md`, beside the API contract.
-4. `fly secrets set DISCORD_CLIENT_KEY=... -a pds-chat`, then ship the same index bundle with the
-   new code: `deploy/bot-ship.sh bot/dist/index-v1.54-deployed-20261111.tar.zst`.
+| Header | What it is |
+|---|---|
+| `X-PDS-Client` | the shared key, compared in constant time |
+| `X-PDS-Client-User` | SHA-256 of the key and the Discord user ID, so who is asking never reaches the assistant |
 
-Then set the same value as `PDS_CLIENT_KEY` here and raise the budgets in `limits.py`.
-
-Worth checking at the same time: whether Cloudflare's rules challenge a server-side POST to `ask.`,
-and whether the assistant's page could take a `?q=` parameter, which would let a shortened answer
-link straight to the whole question rather than to an empty box.
+The assistant then holds its limit per reader rather than per address, and holds this client as a
+whole to 20 questions a minute and 200 an hour, so a key that leaked cannot ask without limit. The
+budgets here widen to match on their own (`Budgets.for_client`), and the bot takes two questions in
+flight instead of one. There is nothing else to change on this side.
 
 ## Setup (about ten minutes)
 

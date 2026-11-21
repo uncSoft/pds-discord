@@ -19,10 +19,18 @@ from collections import defaultdict, deque
 
 Window = tuple[float, int]  # (seconds, how many questions are allowed in them)
 
-# Fits inside the assistant's own per-address limit of 6 a minute and 40 an hour.
+# Without the client key, all of Discord looks to the assistant like one reader, so everything here
+# has to fit inside one reader's allowance of 6 a minute and 40 an hour.
 USER_WINDOWS: tuple[Window, ...] = ((60, 2), (3600, 12))
 GUILD_WINDOWS: tuple[Window, ...] = ((60, 4), (3600, 30))
 GLOBAL_WINDOWS: tuple[Window, ...] = ((60, 5), (3600, 35))
+
+# With the key, the assistant counts per reader and holds this client as a whole to 20 a minute and
+# 200 an hour. A reader still gets less here than the assistant would give them, so someone asking
+# too fast hears it from the bot rather than as a 429.
+KEYED_USER_WINDOWS: tuple[Window, ...] = ((60, 4), (3600, 25))
+KEYED_GUILD_WINDOWS: tuple[Window, ...] = ((60, 10), (3600, 120))
+KEYED_GLOBAL_WINDOWS: tuple[Window, ...] = ((60, 18), (3600, 180))
 TURNS = 6          # messages of history the assistant accepts: three exchanges
 THREAD_TTL = 600.0  # a follow-up ten minutes later is a new question
 
@@ -88,6 +96,13 @@ class Budgets:
                  guild: tuple[Window, ...] = GUILD_WINDOWS,
                  overall: tuple[Window, ...] = GLOBAL_WINDOWS) -> None:
         self.user, self.guild, self.overall = Budget(user), Budget(guild), Budget(overall)
+
+    @classmethod
+    def for_client(cls, keyed: bool) -> "Budgets":
+        """The wider allowances once the assistant knows this client and counts per reader."""
+        if not keyed:
+            return cls()
+        return cls(KEYED_USER_WINDOWS, KEYED_GUILD_WINDOWS, KEYED_GLOBAL_WINDOWS)
 
     def take(self, user_id: int, guild_id: int | None) -> str:
         """Empty when the question may go ahead, else what to tell the person asking."""

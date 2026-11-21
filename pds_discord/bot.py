@@ -45,9 +45,10 @@ class Config:
         self.client_key = os.getenv("PDS_CLIENT_KEY", "").strip()
         self.support_url = os.getenv("PDS_SUPPORT_URL", "").strip() or f"{self.site}/research/support"
         self.invite_url = os.getenv("PDS_INVITE_URL", "").strip()
-        # How many questions this bot will have in flight. The assistant answers two at a time in
-        # all, so one leaves a slot for the readers on the library's own site.
-        self.at_once = max(1, int(os.getenv("PDS_ASK_AT_ONCE", "1")))
+        # How many questions this bot will have in flight. Without the key the assistant answers
+        # two at a time in all, so one leaves a slot for readers on the library's own site; with the
+        # key it answers three, so the bot may hold two and still leave one.
+        self.at_once = max(1, int(os.getenv("PDS_ASK_AT_ONCE") or (2 if self.client_key else 1)))
 
 
 class LibraryBot(discord.Client):
@@ -59,7 +60,8 @@ class LibraryBot(discord.Client):
         self.tree = app_commands.CommandTree(self)
         self.chat = Chat(config.chat_url, config.client_key)
         self.library = Library(config.site)
-        self.budgets = Budgets()
+        # Wider once the key is set, because the assistant then holds a limit per reader itself.
+        self.budgets = Budgets.for_client(bool(config.client_key))
         self.gate = Gate(config.at_once)
         self.threads = Threads()
         register_commands(self)
