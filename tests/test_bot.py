@@ -60,7 +60,7 @@ def test_a_finished_answer_is_shown_with_its_sources_and_buttons(answered):
     bot, who = a_bot(ask=streaming(answered)), FakeInteraction()
     run(bot, who)
     titles = [e.title for e in who.shown]
-    assert titles[:3] == [answered.question, "Background", "Sources"]
+    assert titles[:3] == [answered.question, "Background, from FDA drug labels", "Sources"]
     assert who.edits[-1]["view"] is not None  # the link buttons arrive with the final edit
 
 

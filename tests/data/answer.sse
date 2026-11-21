@@ -8,7 +8,7 @@ event: token
 data: " One case series is retracted [2]. Dr Powers has separately argued that allopregnanolone matters [3]."
 
 event: background
-data: {"text": "Allopregnanolone is a neurosteroid made from progesterone, acting at GABA-A receptors [1].", "sources": [{"n": 1, "label": "Textbook: Basic Neurochemistry, 8th ed", "title": "Neurosteroids", "year": 2012, "url": "https://example.org/neurochem", "source_url": null, "flags": [], "powers_voice": false, "source": "textbook", "licence": "CC BY-NC-ND", "credit": "Academic Press"}], "cited": true}
+data: {"text": "Finasteride's label lists persistent sexual dysfunction after discontinuation [B1]. Allopregnanolone is a neurosteroid made from progesterone [B2].", "sources": [{"n": "B1", "label": "FDA label: Finasteride", "title": "PROPECIA (finasteride) tablets", "year": "2024", "url": "https://dailymed.nlm.nih.gov/example", "source_url": null, "flags": [], "powers_voice": false, "source": "label"}, {"n": "B2", "label": "Textbook: Basic Neurochemistry, 8th ed", "title": "Neurosteroids", "year": 2012, "url": "https://example.org/neurochem", "source_url": null, "flags": [], "powers_voice": false, "source": "textbook", "licence": "CC BY-NC-ND", "credit": "Academic Press"}], "cited": true}
 
 event: further
 data: {"terms": ["finasteride", "persistent"], "query": "finasteride persistent", "search_url": "https://pubmed.ncbi.nlm.nih.gov/?term=finasteride+persistent", "papers": [{"pmid": "39000001", "title": "A newer cohort study of persistent effects after 5-alpha-reductase inhibition", "authors": "Smith J", "journal": "J Sex Med", "year": 2026, "review": false, "preprint": false, "url": "https://pubmed.ncbi.nlm.nih.gov/39000001/"}], "in_library": 2}

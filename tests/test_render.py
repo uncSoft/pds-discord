@@ -60,8 +60,8 @@ def test_further_reading_says_when_pubmeds_matches_are_already_held():
 
 def test_an_answer_becomes_answer_background_sources_and_further_reading(answered):
     embeds = render.answer_embeds(answered, chat_url=CHAT)
-    assert [e.title for e in embeds] == [answered.question, "Background", "Sources",
-                                         "Further reading, from PubMed"]
+    assert [e.title for e in embeds] == [answered.question, "Background, from FDA drug labels",
+                                         "Sources", "Further reading, from PubMed"]
     assert "[[1]](https://postdrugsyndrome.com/research/entries/PFS-001/)" in embeds[0].description
     assert "EPI-015" not in embeds[2].description  # never cited, so never listed
     assert render.ADVICE_NOTE in embeds[-1].footer.text
@@ -191,3 +191,17 @@ def test_fit_message_keeps_the_answer_and_its_sources_in_reading_order():
     kept = render.fit_message(parts)
     assert [e.title for e in kept] == ["answer", "Sources"]
     assert sum(len(e) for e in kept) <= render.MESSAGE_LIMIT
+
+
+def test_a_background_citation_links_to_its_label(answered):
+    embeds = render.answer_embeds(answered, chat_url=CHAT)
+    background = next(e for e in embeds if (e.title or "").startswith("Background"))
+    assert "[[B1]](https://dailymed.nlm.nih.gov/example)" in background.description
+    assert background.title == "Background, from FDA drug labels"
+    assert background.colour.value == render.MUTED
+
+
+def test_an_uncited_background_note_says_it_is_not_from_the_library(answered):
+    answered.background_cited, answered.background_sources = False, []
+    embeds = render.answer_embeds(answered, chat_url=CHAT)
+    assert any((e.title or "") == "General background, not from the library" for e in embeds)

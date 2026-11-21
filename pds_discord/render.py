@@ -27,7 +27,7 @@ FURTHER_LIMIT = 500
 TITLE_LIMIT = 250
 
 ADVICE_NOTE = "Research only, not medical advice"
-CITATION_RE = re.compile(r"\[(\d{1,2})\]")
+CITATION_RE = re.compile(r"\[(B?\d{1,2})\]")
 SENTENCE_END = re.compile(r"[.!?]\s")
 
 
@@ -44,11 +44,15 @@ def shorten(text: str, limit: int) -> tuple[str, bool]:
 
 
 def with_links(text: str, sources: list[Source]) -> str:
-    """Make each [n] citation a link to the record it points at."""
+    """Make each citation a link to what it points at. A source is found by the number it was given
+    ([1] in an answer, [B1] in a background note) and, failing that, by its place in the list."""
+    by_number = {str(s.n): s for s in sources}
+    for place, src in enumerate(sources, 1):
+        by_number.setdefault(str(place), src)
+
     def one(m: re.Match) -> str:
-        num = int(m.group(1))
-        src = sources[num - 1] if 1 <= num <= len(sources) else None
-        return f"[[{num}]]({src.url})" if src and src.url else m.group(0)
+        src = by_number.get(m.group(1))
+        return f"[[{m.group(1)}]]({src.url})" if src and src.url else m.group(0)
     return CITATION_RE.sub(one, text)
 
 
@@ -162,9 +166,12 @@ def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> 
     # Ranked by what a reader can least afford to lose, for when the message will not fit.
     parts: list[tuple[int, discord.Embed]] = [(0, main)]
     if answer.background:
+        # Kept visibly apart from the answer, the way the library's own page keeps it: a background
+        # note comes from the FDA drug labels or from general knowledge, never from the library.
         note, _ = shorten(answer.background, BACKGROUND_LIMIT)
-        bg = discord.Embed(title="Background", colour=ACCENT,
-                           description=with_links(note, answer.background_sources))
+        bg = discord.Embed(colour=MUTED, description=with_links(note, answer.background_sources),
+                           title=("Background, from FDA drug labels" if answer.background_cited
+                                  else "General background, not from the library"))
         if lines := source_lines(answer.background_sources):
             bg.add_field(name="From", value=fit_lines(lines, 400), inline=False)
         parts.append((2, bg))

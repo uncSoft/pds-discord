@@ -183,10 +183,20 @@ class LibraryBot(discord.Client):
                     log.warning("and not the answer on its own either: %s", second)
         except Exception:
             log.exception("a question could not be answered")
-            if not shown:
-                await interaction.edit_original_response(embeds=[discord.Embed(
-                    colour=render.WARN,
-                    description="Something went wrong on my side. Please try again shortly.")])
+            # Whatever arrived still stands. Finish it rather than leaving a reply that says it is
+            # answering, which is what a reader is left watching when this happens mid-stream.
+            try:
+                if reply is not None and reply.text:
+                    reply.done = True
+                    await interaction.edit_original_response(
+                        embeds=render.answer_embeds(reply, chat_url=f"{self.config.chat_url}/"),
+                        view=self.answer_view(reply.support))
+                elif not shown:
+                    await interaction.edit_original_response(embeds=[discord.Embed(
+                        colour=render.WARN,
+                        description="Something went wrong on my side. Please try again shortly.")])
+            except discord.HTTPException as exc:
+                log.warning("and the reply could not be tidied up either: %s", exc)
 
 
 def register_commands(bot: LibraryBot) -> None:

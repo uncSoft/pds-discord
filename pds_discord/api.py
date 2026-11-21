@@ -27,7 +27,9 @@ MIN_QUESTION = 2
 MAX_TURNS = 6         # how many earlier turns it will accept as history
 USER_AGENT = "pds-discord (+https://github.com/uncSoft/pds-discord)"
 
-CITATION_RE = re.compile(r"\[(\d{1,2})\]")
+# [1] in an answer, [B1] in a background note: the background's sources are FDA drug
+# labels and the server numbers them apart from the library's own.
+CITATION_RE = re.compile(r"\[(B?\d{1,2})\]")
 
 
 class AskError(Exception):
@@ -77,7 +79,12 @@ class Source:
         flags = raw.get("flags") or []
         if isinstance(flags, dict):  # the search index spells flags as an object; the chat as a list
             flags = [f"{k}: {v}" for k, v in flags.items()]
-        return cls(n=int(raw.get("n") or 0),
+        # The library's own sources are numbered 1, 2, 3; a background note's are B1, B2, B3.
+        # Whatever arrives is kept as it is: coercing it to an integer threw away a whole answer.
+        count = raw.get("n")
+        number = int(count) if isinstance(count, int) or (isinstance(count, str) and count.isdigit()) \
+            else str(count or "")
+        return cls(n=number,
                    **{k: v for k, v in raw.items() if k in known and k != "flags"},
                    flags=[str(f) for f in flags])
 
@@ -88,6 +95,8 @@ class Source:
             return f"{self.publisher or 'News'}{f' · {self.date[:7]}' if self.date else ''}"
         if self.source == "textbook":
             return self.label.removeprefix("Textbook: ").split(",")[0]
+        if self.label.startswith("FDA label: "):
+            return self.label.removeprefix("FDA label: ")
         return self.item_id or self.label or "Source"
 
     @property
@@ -116,6 +125,7 @@ class Answer:
     support: bool = False
     background: str | None = None
     background_sources: list[Source] = field(default_factory=list)
+    background_cited: bool = False  # from the FDA labels, rather than the model's own general note
     further: dict | None = None
     error: str | None = None
     done: bool = False
@@ -125,7 +135,8 @@ class Answer:
         """Only the sources the answer actually cites, in the order it cites them, one per URL."""
         out: list[Source] = []
         seen: set[str] = set()
-        for num in dict.fromkeys(int(m) for m in CITATION_RE.findall(self.text)):
+        # Only the library's own numbers: a [B1] in the answer text would not be one of these.
+        for num in dict.fromkeys(int(m) for m in CITATION_RE.findall(self.text) if m.isdigit()):
             if 1 <= num <= len(self.sources):
                 src = self.sources[num - 1]
                 key = src.url or f"n{num}"
@@ -138,6 +149,8 @@ class Answer:
         """This answer as a history turn. Source numbers restart every turn, so `[3]` becomes
         `(#3 PFS-001)`, which is what the chat page sends back too."""
         def label(m: re.Match) -> str:
+            if not m.group(1).isdigit():
+                return m.group(0)
             num = int(m.group(1))
             src = self.sources[num - 1] if 1 <= num <= len(self.sources) else None
             return f"(#{num} {src.item_id})" if src and src.item_id else f"(#{num})"
@@ -193,6 +206,7 @@ def apply(answer: Answer, event: str, data: object) -> bool:
     if event == "background" and isinstance(data, dict):
         answer.background = data.get("text") or None
         answer.background_sources = [Source.from_payload(s) for s in data.get("sources") or []]
+        answer.background_cited = bool(data.get("cited"))
         return True
     if event == "further" and isinstance(data, dict):
         answer.further = data

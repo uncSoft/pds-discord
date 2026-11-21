@@ -9,8 +9,8 @@ def test_a_whole_recorded_stream_fills_the_answer(answered):
     assert answered.text.startswith("Several reviews describe")
     assert "[3]" in answered.text
     assert len(answered.sources) == 4
-    assert answered.background.startswith("Allopregnanolone is a neurosteroid")
-    assert answered.background_sources[0].source == "textbook"
+    assert answered.background.startswith("Finasteride's label lists")
+    assert answered.background_sources[0].source == "label"
     assert answered.further["papers"][0]["pmid"] == "39000001"
     assert answered.error is None
 
@@ -46,7 +46,7 @@ def test_badges_follow_the_chat_page_wording(answered):
     retracted, powers = answered.sources[1], answered.sources[2]
     assert retracted.badges == ["Retracted"]
     assert powers.badges == ["Powers' commentary"]
-    assert answered.background_sources[0].badges == ["Textbook background"]
+    assert answered.background_sources[1].badges == ["Textbook background"]
 
 
 def test_flag_words():
@@ -114,3 +114,22 @@ def test_ask_error_carries_a_message_for_a_reader():
 
 def test_the_question_ceiling_matches_the_server():
     assert MAX_QUESTION == 1000
+
+
+def test_a_background_source_is_numbered_apart_from_the_librarys_own(answered):
+    """The server numbers a background note's sources B1, B2 because they are FDA drug labels.
+    Coercing that to an integer raised, which killed the whole answer mid-stream."""
+    assert [s.n for s in answered.background_sources] == ["B1", "B2"]
+    assert answered.background_cited is True
+    assert answered.text and answered.done           # the answer survived the background event
+    assert [s.n for s in answered.cited] == [1, 2, 3]  # and [B1] is not mistaken for one of these
+
+
+def test_an_fda_label_is_named_without_its_prefix(answered):
+    assert answered.background_sources[0].chip == "Finasteride"
+
+
+def test_a_source_number_that_is_neither_raises_nothing():
+    assert Source.from_payload({"n": None}).n == ""
+    assert Source.from_payload({"n": "7"}).n == 7
+    assert Source.from_payload({"n": "B12"}).n == "B12"
