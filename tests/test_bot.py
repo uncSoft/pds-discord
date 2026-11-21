@@ -181,14 +181,12 @@ def test_one_question_in_flight_by_default():
     assert isinstance(a_bot().gate, Gate)
 
 
-def test_a_test_server_can_be_named_so_its_commands_appear_at_once():
-    os.environ.pop("PDS_GUILD_ID", None)
-    assert Config().guild_id == 0
-    os.environ["PDS_GUILD_ID"] = "1566613383325818990"
-    try:
-        assert Config().guild_id == 1566613383325818990
-    finally:
-        os.environ.pop("PDS_GUILD_ID", None)
+def test_commands_are_registered_in_one_place_only():
+    """Global commands plus a per-server copy means every command is listed twice in that server's
+    picker. Only the global set is registered, and on_ready removes copies left behind."""
+    bot = a_bot()
+    assert not hasattr(bot.config, "guild_id")
+    assert hasattr(bot, "drop_server_copies")
 
 
 def test_every_command_is_open_to_everyone():

@@ -46,9 +46,6 @@ class Config:
         self.client_key = os.getenv("PDS_CLIENT_KEY", "").strip()
         self.support_url = os.getenv("PDS_SUPPORT_URL", "").strip() or f"{self.site}/research/support"
         self.invite_url = os.getenv("PDS_INVITE_URL", "").strip()
-        # A test server's ID. Global commands can take a while to reach a client; commands synced to
-        # one server are there at once, which is what you want while trying the bot out.
-        self.guild_id = int(os.getenv("PDS_GUILD_ID") or 0)
         # How many questions this bot will have in flight. Without the key the assistant answers
         # two at a time in all, so one leaves a slot for readers on the library's own site; with the
         # key it answers three, so the bot may hold two and still leave one.
@@ -76,12 +73,6 @@ class LibraryBot(discord.Client):
         # that a command people cannot find was ever registered.
         synced = await self.tree.sync()
         log.info("registered %d commands: %s", len(synced), ", ".join(sorted(c.name for c in synced)))
-        if self.config.guild_id:
-            here = discord.Object(id=self.config.guild_id)
-            self.tree.copy_global_to(guild=here)
-            now = await self.tree.sync(guild=here)
-            log.info("and %d in server %s, which take effect at once: %s", len(now),
-                     self.config.guild_id, ", ".join(sorted(c.name for c in now)))
         try:
             health = await self.chat.health()
             log.info("the assistant is %s (%s passages, model %s)",
@@ -92,6 +83,20 @@ class LibraryBot(discord.Client):
 
     async def on_ready(self) -> None:
         log.info("connected as %s, in %d servers", self.user, len(self.guilds))
+        await self.drop_server_copies()
+
+    async def drop_server_copies(self) -> None:
+        """A set of commands registered to one server sits beside the global set in that server's
+        picker, so every command is listed twice and it is not clear which one a click is using.
+        The global set is the one to keep: remove any per-server copies an earlier version left."""
+        for guild in self.guilds:
+            try:
+                if await self.tree.fetch_commands(guild=guild):
+                    self.tree.clear_commands(guild=guild)
+                    await self.tree.sync(guild=guild)
+                    log.info("removed the duplicate per-server commands from server %s", guild.id)
+            except discord.HTTPException as exc:
+                log.warning("could not tidy the commands in server %s: %s", guild.id, exc)
 
     async def on_app_command_completion(self, interaction: discord.Interaction, command) -> None:
         # The command and where, never what was asked: these are health questions.

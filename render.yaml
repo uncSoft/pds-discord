@@ -18,9 +18,6 @@ services:
         value: https://postdrugsyndrome.com
       - key: PDS_ASK_AT_ONCE
         value: "1"
-      # A test server's ID while trying the bot out, so its commands appear at once. Blank in production.
-      - key: PDS_GUILD_ID
-        sync: false
       # Secrets: Render asks for these when you create the Blueprint.
       - key: DISCORD_TOKEN
         sync: false
