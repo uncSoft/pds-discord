@@ -6,8 +6,8 @@ the records it came from.
 [**➕ Add to Discord**](https://discord.com/oauth2/authorize?client_id=1573604090225758208&scope=bot+applications.commands&permissions=19456)
 · [The library](https://postdrugsyndrome.com/research)
 · [The assistant](https://ask.postdrugsyndrome.com/)
-· [Every command](https://pds-discord-site.onrender.com/commands.html)
-· [Privacy](https://pds-discord-site.onrender.com/privacy.html)
+· [Every command](https://uncsoft.github.io/pds-discord/commands.html)
+· [Privacy](https://uncsoft.github.io/pds-discord/privacy.html)
 
 The library is a curated reading list on post-finasteride syndrome, post-SSRI sexual dysfunction and
 post-retinoid sexual dysfunction, with an assistant that answers from its reviewed records. This bot
@@ -39,7 +39,7 @@ word for word, and the care-first reply gets no "not medical advice" footer unde
 | Talks to | `POST https://ask.postdrugsyndrome.com/api/chat`, answers streamed as Server-Sent Events. The contract is in the library's `bot/HANDOFF.md`. |
 | Storage | None. No database, no disk. Questions are never written down; the few turns kept for follow-ups are in memory for ten minutes |
 | Intents | None privileged. It cannot read what people type in channels: slash commands and the context menu arrive as interactions |
-| Hosting | Render background worker, auto-deploying on push. The site in `site/` is a Render static site. `deploy/` has a systemd unit for a plain VPS |
+| Hosting | Render background worker, auto-deploying on push. The pages in `docs/` are served by GitHub Pages. `deploy/` has a systemd unit for a plain VPS |
 | Tests | 80 pytest tests, including recorded answer streams and end-to-end handler tests with stand-in Discord objects |
 
 ```
@@ -132,9 +132,10 @@ and drop it in beside them.
 ## Hosting
 
 **Render**, the way PandaBot is hosted: Dashboard → New → Blueprint → pick this repo, and
-`render.yaml` sets up the worker and the static site. It asks for `DISCORD_TOKEN` and
-`PDS_CLIENT_KEY`. A worker is about $7 a month; there is no disk, because nothing is stored. Pushes
-to `main` deploy themselves.
+`render.yaml` sets up the worker. It asks for `DISCORD_TOKEN` and `PDS_CLIENT_KEY`. A worker is
+about $7 a month; there is no disk, because nothing is stored. Pushes to `main` deploy themselves.
+A worker has no port and so no URL of its own: the pages in `docs/` are served by GitHub Pages,
+from `main`, with nothing to deploy.
 
 **A plain VPS**, if you would rather: `deploy/push.sh root@SERVER_IP --first` copies the bot up,
 installs it under systemd and starts it. Afterwards, `deploy/push.sh root@SERVER_IP` for code
@@ -147,7 +148,7 @@ Only one copy may run at a time, or every question gets answered twice.
 No database, no disk, no question log. The operational log records which command was used and in
 which server, never the text of a question or an answer. The assistant is told a scrambled version
 of the asker's Discord ID so it can keep its limits fair, never the ID itself. The full statement is
-`site/privacy.html`.
+`docs/privacy.html`.
 
 ## Licence
 

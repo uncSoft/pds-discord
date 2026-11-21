@@ -1,6 +1,7 @@
 # Render Blueprint: Dashboard > New > Blueprint > pick this repo.
 # The bot is a Background Worker with no port and no disk, because it stores nothing: questions are
-# never written down, and the few turns it keeps for follow-up questions live in memory.
+# never written down, and the few turns it keeps for follow-up questions live in memory. A worker
+# has no URL either, so the pages in docs/ are served by GitHub Pages rather than from here.
 services:
   - type: worker
     name: pds-discord
@@ -24,10 +25,3 @@ services:
       # The assistant's DISCORD_CLIENT_KEY. Leave it empty until that is set on the assistant too.
       - key: PDS_CLIENT_KEY
         sync: false
-
-  # The landing, commands, privacy and terms pages. Discord asks for the last two.
-  - type: web
-    name: pds-discord-site
-    runtime: static
-    staticPublishPath: site
-    buildCommand: echo "nothing to build"
