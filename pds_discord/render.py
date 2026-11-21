@@ -19,7 +19,8 @@ MUTED = 0x6B7280         # a declined question
 CARE = 0x5F7A8A          # the care-first reply: calm, not alarming
 WARN = 0x9A3412
 
-ANSWER_LIMIT = 2800      # of Discord's 6,000 characters for one message
+MESSAGE_LIMIT = 5800     # Discord adds up every embed in a message and rejects the lot at 6,000
+ANSWER_LIMIT = 2800      # of those, for the answer itself
 BACKGROUND_LIMIT = 1000
 SOURCES_LIMIT = 1600
 FURTHER_LIMIT = 500
@@ -112,6 +113,28 @@ def link_view(*buttons: tuple[str, str, str]) -> discord.ui.View | None:
     return view
 
 
+def fit_message(parts: list[tuple[int, discord.Embed]], limit: int = MESSAGE_LIMIT) -> list[discord.Embed]:
+    """Keep a message inside Discord's ceiling.
+
+    Discord counts the characters of every embed in a message together and refuses the whole
+    message at 6,000, which leaves the reader looking at whatever was there before: for a streamed
+    answer, the half-written one that still says it is answering. So shed what matters least until
+    it fits, in the order given by each part's rank, and trim the answer's tail as a last resort.
+    The answer and its sources are never dropped.
+    """
+    parts = list(parts)
+    while len(parts) > 1 and sum(len(e) for _, e in parts) > limit:
+        loosest = max(parts, key=lambda p: p[0])
+        if loosest[0] <= 1:  # the answer and its sources stay
+            break
+        parts.remove(loosest)
+    embeds = [e for _, e in parts]
+    if (over := sum(len(e) for e in embeds) - limit) > 0 and embeds[0].description:
+        keep = max(200, len(embeds[0].description) - over - 40)
+        embeds[0].description = shorten(embeds[0].description, keep)[0] + " ..."
+    return embeds
+
+
 def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> list[discord.Embed]:
     """The finished answer, or what has arrived so far while it streams."""
     if answer.support:
@@ -131,29 +154,30 @@ def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> 
     elif streaming:
         text += " ..."
     main = discord.Embed(title=title, colour=ACCENT, description=text or "...")
-    embeds = [main]
 
     if streaming:
         main.set_footer(text="Answering...")
-        return embeds
+        return [main]
 
+    # Ranked by what a reader can least afford to lose, for when the message will not fit.
+    parts: list[tuple[int, discord.Embed]] = [(0, main)]
     if answer.background:
         note, _ = shorten(answer.background, BACKGROUND_LIMIT)
         bg = discord.Embed(title="Background", colour=ACCENT,
                            description=with_links(note, answer.background_sources))
         if lines := source_lines(answer.background_sources):
-            bg.add_field(name="From", value=fit_lines(lines, 600), inline=False)
-        embeds.append(bg)
-
-    cited = answer.cited
-    if cited:
-        embeds.append(discord.Embed(title="Sources", colour=ACCENT,
-                                    description=fit_lines(source_lines(cited), SOURCES_LIMIT)))
+            bg.add_field(name="From", value=fit_lines(lines, 400), inline=False)
+        parts.append((2, bg))
+    if cited := answer.cited:
+        parts.append((1, discord.Embed(title="Sources", colour=ACCENT,
+                                       description=fit_lines(source_lines(cited), SOURCES_LIMIT))))
     if further := further_text(answer.further):
-        embeds.append(discord.Embed(title="Further reading, from PubMed", colour=MUTED,
-                                    description=further))
+        parts.append((3, discord.Embed(title="Further reading, from PubMed", colour=MUTED,
+                                       description=further)))
     if answer.error:
-        embeds.append(discord.Embed(colour=WARN, description=answer.error))
+        parts.append((1, discord.Embed(colour=WARN, description=answer.error)))
+
+    embeds = fit_message(parts)
     embeds[-1].set_footer(text=f"{ADVICE_NOTE} · answered from the library's reviewed records")
     return embeds
 

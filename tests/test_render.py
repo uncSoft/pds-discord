@@ -1,3 +1,5 @@
+import discord
+
 from pds_discord import render
 from pds_discord.api import Answer, Source
 from pds_discord.library import Entry
@@ -143,3 +145,49 @@ def test_link_buttons_skip_the_ones_with_no_url():
     view = render.link_view(("One", "", "https://a"), ("Two", "", ""))
     assert view is not None and len(view.children) == 1
     assert render.link_view(("None", "", "")) is None
+
+
+def maximal(answered) -> Answer:
+    """Everything at once and all of it long: the shape that overflows Discord's whole-message
+    ceiling even though each embed is under its own."""
+    answered.question = "why " + "does this keep happening to people who stopped taking it " * 5
+    answered.text = "A sentence that keeps going. " * 200 + " ".join(f"[{n}]" for n in (1, 2, 3, 4))
+    answered.background = "Background that also keeps going. " * 80
+    answered.background_sources = answered.sources[:3]
+    answered.sources = [Source(n=i, item_id=f"LIT-{i:03d}", url=f"https://postdrugsyndrome.com/{i}",
+                               title="A paper with a title of entirely unreasonable length " * 2,
+                               year=2020 + i % 5, flags=["RETRACTED. Withdrawn."] if i % 3 else [])
+                        for i in range(1, 11)]
+    answered.text += " " + " ".join(f"[{n}]" for n in range(1, 11))
+    return answered
+
+
+def test_a_maximal_answer_still_fits_in_one_discord_message(answered):
+    embeds = render.answer_embeds(maximal(answered), chat_url=CHAT)
+    assert sum(len(e) for e in embeds) <= 6000
+    assert all(len(e.description or "") <= 4096 for e in embeds)
+
+
+def test_what_gets_dropped_is_the_least_useful_part(answered):
+    embeds = render.answer_embeds(maximal(answered), chat_url=CHAT)
+    titles = [e.title for e in embeds]
+    assert titles[0] == render.shorten(answered.question, render.TITLE_LIMIT)[0]
+    assert "Sources" in titles                               # never dropped
+    assert "Further reading, from PubMed" not in titles      # the first to go
+
+
+def test_a_finished_answer_never_still_says_it_is_answering(answered):
+    for reply in (answered, maximal(answered)):
+        embeds = render.answer_embeds(reply, chat_url=CHAT)
+        assert embeds[-1].footer.text and "Answering" not in embeds[-1].footer.text
+        assert not (embeds[0].description or "").endswith(" ...")
+
+
+def test_fit_message_keeps_the_answer_and_its_sources_in_reading_order():
+    parts = [(0, discord.Embed(title="answer", description="a" * 3000)),
+             (2, discord.Embed(title="Background", description="b" * 2000)),
+             (1, discord.Embed(title="Sources", description="c" * 1500)),
+             (3, discord.Embed(title="Further", description="d" * 500))]
+    kept = render.fit_message(parts)
+    assert [e.title for e in kept] == ["answer", "Sources"]
+    assert sum(len(e) for e in kept) <= render.MESSAGE_LIMIT

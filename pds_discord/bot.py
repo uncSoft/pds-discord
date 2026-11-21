@@ -28,7 +28,11 @@ from .limits import Budgets, Gate, Threads
 
 log = logging.getLogger("pds_discord")
 
-EDIT_EVERY = 1.75          # seconds between edits while an answer streams, to stay inside Discord's limits
+# Seconds between edits while an answer streams. Discord rate-limits edits to one reply, and
+# discord.py answers a 429 by sleeping, which holds up every edit behind it including the last one.
+# Three seconds is still live to watch and makes about five edits of a typical answer rather than
+# ten. The final edit never waits on this.
+EDIT_EVERY = 3.0
 SOURCE_URL = "https://github.com/uncSoft/pds-discord"  # AGPL: readers of the hosted bot can get its source
 # View Channels, Send Messages, Embed Links. It needs nothing else, and never reads message content.
 INVITE_PERMISSIONS = 19456
@@ -167,7 +171,16 @@ class LibraryBot(discord.Client):
             await interaction.edit_original_response(
                 embeds=[discord.Embed(colour=render.WARN, description=exc.message)])
         except discord.HTTPException as exc:
+            # The answer arrived but Discord would not take the message. Try again with the answer
+            # on its own, rather than leaving a reader looking at a reply that says it is answering.
             log.warning("could not update the reply: %s", exc)
+            if reply is not None and reply.text:
+                try:
+                    await interaction.edit_original_response(
+                        embeds=render.answer_embeds(reply, chat_url=f"{self.config.chat_url}/")[:1],
+                        view=self.answer_view(reply.support))
+                except discord.HTTPException as second:
+                    log.warning("and not the answer on its own either: %s", second)
         except Exception:
             log.exception("a question could not be answered")
             if not shown:
