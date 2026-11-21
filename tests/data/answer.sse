@@ -1,0 +1,18 @@
+event: meta
+data: {"decline": false, "support": false, "sources": [{"n": 1, "label": "PFS-001", "title": "Post-finasteride syndrome: a surmountable challenge for clinicians", "year": 2020, "url": "https://postdrugsyndrome.com/research/entries/PFS-001/", "source_url": "https://www.fertstert.org/article/S0015-0282(19)32599-3/fulltext", "flags": [], "powers_voice": false, "also": null, "source": "record", "item_id": "PFS-001"}, {"n": 2, "label": "DISC-024", "title": "Case series of persistent effects", "year": 2019, "url": "https://postdrugsyndrome.com/research/entries/DISC-024/", "source_url": null, "flags": ["RETRACTED. Withdrawn by the journal in 2021. Never cite this as evidence."], "powers_voice": false, "also": null, "source": "record", "item_id": "DISC-024"}, {"n": 3, "label": "Powers comment", "title": "Comment on allopregnanolone", "year": 2023, "url": "https://postdrugsyndrome.com/research/entries/POW-012/", "source_url": null, "flags": [], "powers_voice": true, "also": "PFS-012", "source": "record", "item_id": "POW-012"}, {"n": 4, "label": "EPI-015", "title": "A record the answer never cites", "year": 2021, "url": "https://postdrugsyndrome.com/research/entries/EPI-015/", "source_url": null, "flags": [], "powers_voice": false, "also": null, "source": "record", "item_id": "EPI-015"}]}
+
+event: token
+data: "Several reviews describe effects that persist after finasteride is stopped [1]."
+
+event: token
+data: " One case series is retracted [2]. Dr Powers has separately argued that allopregnanolone matters [3]."
+
+event: background
+data: {"text": "Allopregnanolone is a neurosteroid made from progesterone, acting at GABA-A receptors [1].", "sources": [{"n": 1, "label": "Textbook: Basic Neurochemistry, 8th ed", "title": "Neurosteroids", "year": 2012, "url": "https://example.org/neurochem", "source_url": null, "flags": [], "powers_voice": false, "source": "textbook", "licence": "CC BY-NC-ND", "credit": "Academic Press"}], "cited": true}
+
+event: further
+data: {"terms": ["finasteride", "persistent"], "query": "finasteride persistent", "search_url": "https://pubmed.ncbi.nlm.nih.gov/?term=finasteride+persistent", "papers": [{"pmid": "39000001", "title": "A newer cohort study of persistent effects after 5-alpha-reductase inhibition", "authors": "Smith J", "journal": "J Sex Med", "year": 2026, "review": false, "preprint": false, "url": "https://pubmed.ncbi.nlm.nih.gov/39000001/"}], "in_library": 2}
+
+event: done
+data: {}
+

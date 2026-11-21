@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Commands · Research Library for Discord</title>
+  <meta name="description" content="Every command the Research Library bot answers, and what each one shows.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="logo">📚</div>
+    <h1>Commands</h1>
+    <p class="lede">Nine of them. Type <code>/</code> in any channel the bot can see and Discord lists them.</p>
+  </header>
+
+  <h2>Asking</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>/ask question</code></td><td>Puts your question to the library's assistant, which answers from the library's reviewed records and cites each one. Add <code>private: true</code> and only you see the answer.</td></tr>
+    <tr><td>Right-click a message → Apps → <strong>Ask the library</strong></td><td>Takes the question somebody already typed in chat and looks it up.</td></tr>
+    <tr><td><code>/forget</code></td><td>Drops the few turns kept in memory for your follow-up questions. Your next question starts fresh.</td></tr>
+  </table>
+  <p>A follow-up in the same channel reads as a follow-up for ten minutes, so "and in women?" works after a question about men. Answers are shortened to fit Discord; a long one links to the rest.</p>
+
+  <h2>Looking things up</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>/search words</code></td><td>Finds records by title, keyword, record ID or catalog number. Five at a time, each one a link.</td></tr>
+    <tr><td><code>/record id</code></td><td>Shows one record: what it is, who wrote it, where it appeared, and any warnings on it. Start typing and Discord suggests records.</td></tr>
+    <tr><td><code>/glossary term</code></td><td>What a term means in the library, with a link to its page.</td></tr>
+    <tr><td><code>/news</code></td><td>The most recent news items the library's curator has approved.</td></tr>
+  </table>
+
+  <h2>The rest</h2>
+  <table>
+    <tr><th>Command</th><th>What it does</th></tr>
+    <tr><td><code>/support</code></td><td>Crisis lines and the library's support page.</td></tr>
+    <tr><td><code>/about</code></td><td>What the library is, what the bot will not do, and how to add it elsewhere.</td></tr>
+  </table>
+
+  <h2>What it will not answer</h2>
+  <p>Questions about what to take, what dose, or whether something is safe for you are declined, in the assistant's own words. That is a decision made by the library's assistant, not something this bot could be talked out of. Nothing here is medical advice, and none of it replaces a clinician.</p>
+
+  <footer>
+    <a href="index.html">Home</a> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of service</a> · <a href="https://postdrugsyndrome.com/research">The library</a> · <a href="https://github.com/uncSoft/pds-discord">Source code</a>
+  </footer>
+</main>
+</body>
+</html>

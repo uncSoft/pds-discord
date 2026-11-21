@@ -1,0 +1,24 @@
+[Unit]
+Description=Discord bot for the post-drug syndromes research library
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pdsbot
+WorkingDirectory=/opt/pds-discord
+ExecStart=/opt/pds-discord/.venv/bin/python -m pds_discord
+Environment=PYTHONUNBUFFERED=1
+# Nothing is written, so nothing needs compiling to disk either.
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Come back automatically after crashes, network blips and reboots.
+Restart=always
+RestartSec=5
+
+# Hardening: this bot writes nothing at all, so it gets no writable path.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

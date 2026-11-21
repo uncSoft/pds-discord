@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Research Library for Discord</title>
+  <meta name="description" content="Ask the post-drug syndromes research library from your Discord server. Answers cite the records they come from, and nothing is stored.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="logo">📚</div>
+    <h1>Research Library</h1>
+    <p class="lede">Ask the post-drug syndromes research library from your own Discord server. Every answer cites the records it came from.</p>
+    <div class="actions">
+      <a class="button" href="https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&amp;scope=bot+applications.commands&amp;permissions=19456">Add to Discord</a>
+      <a class="button secondary" href="https://postdrugsyndrome.com/research">The library</a>
+      <a class="button secondary" href="commands.html">Commands</a>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card"><h3>Answers with sources</h3><p><code>/ask</code> puts your question to the library's assistant. The reply lists the records it drew on, each one a link.</p></div>
+    <div class="card"><h3>Research, not advice</h3><p>Requests for dosing, diagnosis or what to take are declined. Dr Powers' views are attributed to him, and retracted or unverifiable sources are labeled.</p></div>
+    <div class="card"><h3>The library itself</h3><p><code>/search</code>, <code>/record</code> and <code>/glossary</code> read the library directly, so you can look something up without asking a question.</p></div>
+    <div class="card"><h3>Nothing stored</h3><p>Your questions are not logged, here or by the assistant. A few recent turns stay in memory for follow-up questions, and <code>/forget</code> drops them.</p></div>
+  </section>
+
+  <h2>Getting started</h2>
+  <ol>
+    <li>Add the bot to your server. It asks for three permissions: see channels, send messages, embed links.</li>
+    <li>Type <code>/ask</code> and your question. The answer appears in the channel, with its sources.</li>
+    <li>Ask a follow-up in the same channel and it keeps the thread of the conversation for ten minutes.</li>
+    <li>Right-click anyone's message and choose Apps, then <strong>Ask the library</strong>, to look up a question somebody asked in chat.</li>
+  </ol>
+  <p>Server admins can limit the commands to particular channels in Server Settings, under Integrations. The bot never reads what anyone types: it only sees the questions people send it.</p>
+
+  <h2>If you are struggling</h2>
+  <p>These syndromes are hard to live with, and some of the people asking are in a bad way. Ask the bot anything about the research, but if you are in crisis please reach someone now: the library keeps the lines for several countries on its <a href="https://postdrugsyndrome.com/research/support">support page</a>, and <code>/support</code> brings them up in Discord.</p>
+
+  <footer>
+    <a href="commands.html">Commands</a> · <a href="privacy.html">Privacy policy</a> · <a href="terms.html">Terms of service</a> · <a href="https://postdrugsyndrome.com/research">The library</a> · <a href="https://ask.postdrugsyndrome.com/">The assistant</a> · <a href="https://github.com/uncSoft/pds-discord">Source code</a>
+  </footer>
+</main>
+</body>
+</html>

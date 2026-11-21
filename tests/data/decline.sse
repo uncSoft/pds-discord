@@ -1,0 +1,9 @@
+event: meta
+data: {"decline": true, "support": false, "sources": []}
+
+event: token
+data: "I can't say what anyone should take or stop taking. I can show you what the research in the library says."
+
+event: done
+data: {}
+

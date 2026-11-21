@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy policy · Research Library for Discord</title>
+  <meta name="description" content="What the Research Library bot sends on, what it keeps, and what it never writes down.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <h1>Privacy policy</h1>
+  <p class="updated">Last updated 21 November 2026.</p>
+
+  <p>People ask this bot about their own health. It is built so that those questions are not collected.</p>
+
+  <h2>What it stores</h2>
+  <p>Nothing. There is no database and no disk. The bot keeps your last few questions and answers in memory, for ten minutes, so that a follow-up question makes sense, and forgets them when you run <code>/forget</code>, when ten minutes pass, or whenever the bot restarts.</p>
+
+  <h2>What it sends on</h2>
+  <p>When you use <code>/ask</code>, your question goes to the research library's assistant at <a href="https://ask.postdrugsyndrome.com/">ask.postdrugsyndrome.com</a>, which is run by the same people as the library. The assistant answers from the library's records. It runs with its question log switched off, so your question is not written down there either.</p>
+  <p>The assistant needs to know that a question came from this bot, so that it can tell one person from another and keep its asking limits fair. It is told a scrambled version of your Discord user ID, not the ID itself and not your name. The scrambling cannot be undone, and the same person gets the same scrambled value.</p>
+  <p><code>/search</code>, <code>/record</code>, <code>/glossary</code> and <code>/news</code> read public files from the library's own site. Nothing about you is sent with those.</p>
+
+  <h2>What Discord knows</h2>
+  <p>Discord runs the conversation and sees everything in it, under its own privacy policy. The bot has no privileged access to your server: it cannot read messages people type in channels. It sees a message only when someone hands it one, by typing a command or by right-clicking a message and choosing Apps, then Ask the library.</p>
+
+  <h2>Logs</h2>
+  <p>The bot writes an operational log so it can be kept running: which command was used, in which server, and any errors. It never writes the text of a question or an answer, and it keeps no record of who asked what.</p>
+
+  <h2>Deleting your data</h2>
+  <p>There is nothing held to delete. <code>/forget</code> clears the conversation in memory straight away.</p>
+
+  <h2>Children</h2>
+  <p>Discord requires its users to be 13 or older, and older in some countries. This bot is for people reading medical research and is not meant for children.</p>
+
+  <h2>Questions</h2>
+  <p>Open an issue at <a href="https://github.com/uncSoft/pds-discord">github.com/uncSoft/pds-discord</a>. The bot's whole source is there, so anything written here can be checked against it.</p>
+
+  <footer>
+    <a href="index.html">Home</a> · <a href="commands.html">Commands</a> · <a href="terms.html">Terms of service</a> · <a href="https://postdrugsyndrome.com/research">The library</a>
+  </footer>
+</main>
+</body>
+</html>

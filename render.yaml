@@ -1,0 +1,33 @@
+# Render Blueprint: Dashboard > New > Blueprint > pick this repo.
+# The bot is a Background Worker with no port and no disk, because it stores nothing: questions are
+# never written down, and the few turns it keeps for follow-up questions live in memory.
+services:
+  - type: worker
+    name: pds-discord
+    runtime: python
+    plan: starter            # workers aren't on the free tier; the free tier sleeps, which a bot can't
+    region: oregon
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m pds_discord
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.5
+      - key: PDS_CHAT_URL
+        value: https://ask.postdrugsyndrome.com
+      - key: PDS_SITE_ORIGIN
+        value: https://postdrugsyndrome.com
+      - key: PDS_ASK_AT_ONCE
+        value: "1"
+      # Secrets: Render asks for these when you create the Blueprint.
+      - key: DISCORD_TOKEN
+        sync: false
+      # The assistant's DISCORD_CLIENT_KEY. Leave it empty until that is set on the assistant too.
+      - key: PDS_CLIENT_KEY
+        sync: false
+
+  # The landing, commands, privacy and terms pages. Discord asks for the last two.
+  - type: web
+    name: pds-discord-site
+    runtime: static
+    staticPublishPath: site
+    buildCommand: echo "nothing to build"
