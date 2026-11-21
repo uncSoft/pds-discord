@@ -159,10 +159,8 @@ def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> 
         text += " ..."
     main = discord.Embed(title=title, colour=ACCENT, description=text or "...")
 
-    if streaming:
-        main.set_footer(text="Answering...")
-        return [main]
-
+    # Sources are known from the first event and are listed as the answer cites them, so a reader
+    # has the whole thing in front of them while the server is still working on the extras.
     # Ranked by what a reader can least afford to lose, for when the message will not fit.
     parts: list[tuple[int, discord.Embed]] = [(0, main)]
     if answer.background:
@@ -185,7 +183,8 @@ def answer_embeds(answer: Answer, *, chat_url: str, streaming: bool = False) -> 
         parts.append((1, discord.Embed(colour=WARN, description=answer.error)))
 
     embeds = fit_message(parts)
-    embeds[-1].set_footer(text=f"{ADVICE_NOTE} · answered from the library's reviewed records")
+    embeds[-1].set_footer(text="Answering..." if streaming else
+                          f"{ADVICE_NOTE} · answered from the library's reviewed records")
     return embeds
 
 

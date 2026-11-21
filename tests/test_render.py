@@ -81,10 +81,15 @@ def test_an_answer_too_long_for_discord_links_to_the_assistant(answered):
     assert f"[Read the rest]({CHAT})" in embeds[0].description
 
 
-def test_while_it_streams_only_the_answer_shows(answered):
+def test_the_sources_are_there_while_it_is_still_streaming(answered):
+    """A reader should have the answer and the records behind it before the server has finished
+    its background note and its PubMed lookup, which take several seconds more."""
+    answered.background, answered.further = None, None  # neither has arrived yet
     embeds = render.answer_embeds(answered, chat_url=CHAT, streaming=True)
-    assert len(embeds) == 1 and embeds[0].footer.text == "Answering..."
+    assert [e.title for e in embeds] == [answered.question, "Sources"]
     assert embeds[0].description.endswith("...")
+    assert embeds[-1].footer.text == "Answering..."
+    assert render.ADVICE_NOTE not in (embeds[-1].footer.text or "")
 
 
 def test_a_declined_question_shows_the_assistants_own_words(declined):

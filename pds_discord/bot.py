@@ -28,11 +28,10 @@ from .limits import Budgets, Gate, Threads
 
 log = logging.getLogger("pds_discord")
 
-# Seconds between edits while an answer streams. Discord rate-limits edits to one reply, and
-# discord.py answers a 429 by sleeping, which holds up every edit behind it including the last one.
-# Three seconds is still live to watch and makes about five edits of a typical answer rather than
-# ten. The final edit never waits on this.
-EDIT_EVERY = 3.0
+# Seconds between edits while an answer streams. Discord rate-limits edits to one reply at roughly
+# five in five seconds and discord.py answers a 429 by sleeping, which holds up every edit behind
+# it, so this stays under that rather than at it. The final edit never waits on this.
+EDIT_EVERY = 1.2
 SOURCE_URL = "https://github.com/uncSoft/pds-discord"  # AGPL: readers of the hosted bot can get its source
 # View Channels, Send Messages, Embed Links. It needs nothing else, and never reads message content.
 INVITE_PERMISSIONS = 19456
